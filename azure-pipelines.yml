@@ -1,5 +1,5 @@
 trigger:
-- main
+- none
 
 pool:
   name: 'dockerpoc'
@@ -7,7 +7,7 @@ pool:
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '10.x'
+    versionSpec: '12.x'
   displayName: 'Install Node.js'
 
 - script: |
@@ -15,12 +15,26 @@ steps:
     npm run build
   displayName: 'npm install and build'
 
+- script: |
+    npm pack
+  displayName: 'Package for npm release'
+
 - task: CopyFiles@2
   inputs:
-    Contents: 'build/**' # Pull the build directory (React)
-    TargetFolder: '$(Build.ArtifactStagingDirectory)'
+    sourceFolder: '$(Build.SourcesDirectory)'
+    contents: '*.tgz' 
+    targetFolder: $(Build.ArtifactStagingDirectory)/npm
+  displayName: 'Copy npm package'
+
+- task: CopyFiles@2
+  inputs:
+    sourceFolder: '$(Build.SourcesDirectory)'
+    contents: 'package.json' 
+    targetFolder: $(Build.ArtifactStagingDirectory)/npm
+  displayName: 'Copy package.json'
 
 - task: PublishBuildArtifacts@1
-  inputs: 
-    PathtoPublish: $(Build.ArtifactStagingDirectory) # dist or build files
-    ArtifactName: 'www' # output artifact named www
+  inputs:
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)/npm'
+    artifactName: npm
+  displayName: 'Publish npm artifact'
